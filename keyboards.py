@@ -15,13 +15,15 @@ def create_markup_setting() -> InlineKeyboardMarkup:
 
     markup_settings.add(InlineKeyboardButton("Максимальная длина текста",
                                              callback_data='param_max_length'))
+    markup_settings.add(InlineKeyboardButton("Число путей генерации для каждого шага",
+                                             callback_data='param_num_beams'))
     markup_settings.add(InlineKeyboardButton("Число наиболее вероятных следующих слов",
                                              callback_data='param_top_k'))
     markup_settings.add(InlineKeyboardButton("Совокупная вероятность для следующих слов",
                                              callback_data='param_top_p'))
     markup_settings.add(InlineKeyboardButton("Вероятность появления слов с большой вероятностью",
                                              callback_data='param_temperature'))
-    markup_settings.add(InlineKeyboardButton("Узнать текущее параметры",
+    markup_settings.add(InlineKeyboardButton("Узнать текущие параметры",
                                              callback_data='param_info'))
     markup_settings.add(InlineKeyboardButton("Установить параметры по умолчанию",
                                              callback_data='param_default'))
@@ -38,6 +40,15 @@ def create_markup_max_length() -> Tuple[InlineKeyboardMarkup, List[int]]:
     markup_max_length.add(InlineKeyboardButton('Назад', callback_data='change_back'))
 
     return markup_max_length, max_length_value
+
+def create_markup_num_beams() -> Tuple[InlineKeyboardMarkup, List[int]]:
+    markup_num_beams: InlineKeyboardMarkup = InlineKeyboardMarkup()
+    num_beams: List[int] = [1, 2, 3, 4, 5]
+    for n in num_beams:
+        markup_num_beams.add((InlineKeyboardButton(f'{n}', callback_data=f'change_num_beams_{n}')))
+    markup_num_beams.add(InlineKeyboardButton('Назад', callback_data='change_back'))
+
+    return markup_num_beams, num_beams
 
 
 def create_markup_top_k() -> Tuple[InlineKeyboardMarkup, List[int]]:

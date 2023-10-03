@@ -1,7 +1,7 @@
 from telebot import TeleBot
 from model import Model
-from keyboards import create_keyboard, create_markup_max_length, create_markup_top_k, create_markup_top_p, \
-    create_markup_setting, create_markup_temperature
+from keyboards import create_keyboard, create_markup_max_length, create_markup_num_beams, create_markup_top_k, \
+    create_markup_top_p, create_markup_setting, create_markup_temperature
 
 token = "6690241129:AAExSBXT5Co7dIZpGeNe-1mVITKfpk7ZpNQ"
 bot: TeleBot = TeleBot(token)
@@ -9,6 +9,7 @@ model: Model = Model()
 
 keyboard = create_keyboard()
 markup_settings = create_markup_setting()
+markup_num_beams, num_beams_value = create_markup_num_beams()
 markup_top_p, top_p_value = create_markup_top_p()
 markup_top_k, top_k_value = create_markup_top_k()
 markup_temperature, temperature_value = create_markup_temperature()
@@ -44,12 +45,15 @@ def send_deactivate_bot(message):
 
 @bot.message_handler(commands=['settings'])
 def send_setting_message(message):
-    bot.send_message(message.chat.id, 'Меню для настройки генерации текста\n',
+    bot.send_message(message.chat.id, 'Меню для настройки генерации ответов на вопросы\n',
                      reply_markup=markup_settings)
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('param_'))
 def callback_param(call):
+    if call.data == 'param_num_beams':
+        bot.edit_message_text('Изменение числа путей генерации текста для каждого шага', call.message.chat.id,
+                              call.message.message_id, reply_markup=markup_num_beams)
     if call.data == 'param_top_k':
         bot.edit_message_text('Изменение числа наиболее вероятных следующих слов', call.message.chat.id,
                               call.message.message_id, reply_markup=markup_top_k)
@@ -68,6 +72,14 @@ def callback_param(call):
         model.set_default()
         bot.send_message(call.message.chat.id, 'Параметры по умолчанию установлены')
 
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('change_num_beams'))
+def callback_change_num_beams(call):
+    for n in num_beams_value:
+        if call.data == f'change_num_beams_{n}':
+            model.set_num_beams(n)
+            bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id,
+                                          reply_markup=markup_settings)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('change_top_k'))
 def callback_change_top_k(call):
@@ -116,6 +128,7 @@ def callback_change_back(call):
 def send_message(message):
     if model.active():
         bot.send_chat_action(message.chat.id, action='typing')
+        message.text = 'Вопрос: ' + message.text + '\nОтвет:'
         result_generation = model.generate_text(message.text)
         bot.send_message(message.chat.id, result_generation)
 
